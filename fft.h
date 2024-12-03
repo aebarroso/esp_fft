@@ -1,16 +1,31 @@
-#ifndef FFT_H
-#define FFT_H
+#ifndef REALTIMEFFT_H
+#define REALTIMEFFT_H
 
 #include <Arduino.h>
-#include <cmath>
+#include "fft.h"
 
-#define FFT_WINDOW 256
+class RealTimeFFT {
+public:
+    RealTimeFFT(uint8_t analogPin, float samplingFrequency, size_t sampleSize);
 
-class FFT{
-  public:
-  FFT();
-  void computeFFT(float *real, float *imaginary);
-  void computeMagnitude(float *real, float *imaginary, float *magnitude);
+    void begin();
+    void process();
+
+private:
+    uint8_t _analogPin;
+    float _samplingFrequency;
+    size_t _sampleSize;
+
+    float *_real;
+    float *_imaginary;
+    float *_magnitude;
+    volatile int _bufferIndex;
+    volatile bool _bufferFull;
+
+    void IRAM_ATTR onTimer();
+    hw_timer_t *_timer;
+
+    void computeAndPrintFFT();
 };
 
 #endif

@@ -1,30 +1,17 @@
 #include <Arduino.h>
-#include "fft.h"
+#include "RealTimeFFT.h"
 
-#define SAMPLE_SIZE FFT_WINDOW
+#define ANALOG_PIN A0
+#define SAMPLING_FREQUENCY 1000
+#define SAMPLE_SIZE 256
 
-float real[SAMPLE_SIZE];
-float imaginary[SAMPLE_SIZE];
-float magnitude[SAMPLE_SIZE];
-
-FFT fft;
+RealTimeFFT realTimeFFT(ANALOG_PIN, SAMPLING_FREQUENCY, SAMPLE_SIZE);
 
 void setup() {
     Serial.begin(115200);
-
-    for (int i = 0; i < SAMPLE_SIZE; i++) {
-        real[i] = sin(2 * M_PI * i / SAMPLE_SIZE);
-        imaginary[i] = 0.0; 
-    }
-
-    fft.computeFFT(real, imaginary);
-    fft.computeMagnitude(real, imaginary, magnitude);
-    
-    for (int i = 0; i < SAMPLE_SIZE / 2; i++) { 
-        Serial.printf("Frequency bin %d: Magnitude = %.2f\n", i, magnitude[i]);
-    }
+    realTimeFFT.begin();
 }
 
 void loop() {
-    
+    realTimeFFT.process();
 }

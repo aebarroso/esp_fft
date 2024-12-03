@@ -1,56 +1,60 @@
-#include "fft.h"
+#include "RealTimeFFT.h"
 
-FFT::FFT(){
-  
+RealTimeFFT::RealTimeFFT(uint8_t analogPin, float samplingFrequency, size_t sampleSize)
+    : _analogPin(analogPin),
+      _samplingFrequency(samplingFrequency),
+      _sampleSize(sampleSize),
+      _bufferIndex(0),
+      _bufferFull(false) {
+
+    _real = new float[sampleSize];
+    _imaginary = new float[sampleSize];
+    _magnitude = new float[sampleSize];
 }
-void FFT::computeFFT(float *real, float *imaginary){
-    int n = FFT_WINDOW;
-    int halfSize, j, k;
-    float tReal, tImaginary, uReal, angle;
-    j = 0;
-    for (int i = 0; i < n; i++){
-        if(i < j){
-            std::swap(real[i], real[j]);
-            std::swap(imaginary[i], imaginary[j]);
-        }
-        k = n / 2;
-        while (k > 0 && j >= k){
-            j -= k;
-            k /= 2;
-        }
-        j += k;
+
+void RealTimeFFT::begin() {
+    pinMode(_analogPin, INPUT);
+
+    _timer = timerBegin(0, 80, true);
+    timerAttachInterrupt(_timer, [this]() { this->onTimer(); }, true);
+    timerAlarmWrite(_timer, 1000000 / _samplingFrequency, true);
+    timerAlarmEnable(_timer);
+
+    Serial.println("Real-time FFT setup complete.");
+}
+
+void IRAM_ATTR RealTimeFFT::onTimer() {
+    _real[_bufferIndex] = analogRead(_analogPin) / 1023.0; // Normalize to 0-1 range
+    _imaginary[_bufferIndex] = 0.0;
+
+    _bufferIndex++;
+    if (_bufferIndex >= _sampleSize) {
+        _bufferFull = true;
+        _bufferIndex = 0;
     }
-    for(int start = 0; halfSize < n; halfSize *= 2){
-        angle = -M_PI / halfSize;
-        float wReal = cos(angle);
-        float wImaginary = sin(angle);
+}
 
-        for(int start = 0; start < n; start += 2 * halfSize){
-            uReal = 1.0;
-            uImaginary = 0.0;
-
-            for (int m = 0; m < halfSize; ++m){
-                int evenIndex = start + m;
-                int oddIndex = start + m + halfSize;
-
-                tReal = uReal * real[oddIndex] - uImaginary * imaginary[oddIndex];
-                tImaginary = uReal * imaginary[oddIndex] + uImaginary * real[oddIndex];
-
-                real[oddIndex] = real[evenIndex] - tReal;
-                imaginary[oddIndex] = imaginary[evenIndex] - tImaginary;
-
-                real[evenIndex] += tReal;
-                imaginary[evenIndex] += tImaginary;
-
-                float tempReal = uReal * wReal - uImaginary * wImaginary;
-                uImaginary = uReal * wImaginary + uImaginary * wReal;
-                uReal = tempReal;
-            }
-        }
+void RealTimeFFT::process() {
+    if (_bufferFull) {
+        _bufferFull = false;
+        computeAndPrintFFT();
     }
-    FFT::computeMagnitude(float *real, float *imaginary, float *magnitude){
-        for (int i = 0; i < FFT_WINDOW; ++i){
-            magnitude[i] = sqrt(real)
-        }
+}
+
+void RealTimeFFT::computeAndPrintFFT() {
+    FFT fft;
+
+    fft.computeFFT(_real, _imaginary);
+    fft.computeMagnitude(_real, _imaginary, _magnitude);
+
+    for (size_t i = 0; i < _sampleSize / 2; i++) {
+        float frequency = (i * _samplingFrequency) / _sampleSize;
+        Serial.printf("Frequency: %.1f Hz, Magnitude: %.2f\n", frequency, _magnitude[i]);
     }
+}
+
+RealTimeFFT::~RealTimeFFT() {
+    delete[] _real;
+    delete[] _imaginary;
+    delete[] _magnitude;
 }
