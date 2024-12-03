@@ -3,7 +3,7 @@
 FFT::FFT(){
   
 }
-void FFT::computeFFT(float *real, float +imaginary){
+void FFT::computeFFT(float *real, float *imaginary){
     int n = FFT_WINDOW;
     int halfSize, j, k;
     float tReal, tImaginary, uReal, angle;
