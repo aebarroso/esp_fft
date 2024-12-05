@@ -6,13 +6,13 @@
 
 class RealTimeFFT {
 public:
-    RealTimeFFT(uint8_t analogPin, float samplingFrequency, size_t sampleSize);
+    RealTimeFFT(float samplingFrequency, size_t sampleSize);
 
     void begin();
+    void addSample(float value);
     void process();
 
 private:
-    uint8_t _analogPin;
     float _samplingFrequency;
     size_t _sampleSize;
 
@@ -21,9 +21,6 @@ private:
     float *_magnitude;
     volatile int _bufferIndex;
     volatile bool _bufferFull;
-
-    void IRAM_ATTR onTimer();
-    hw_timer_t *_timer;
 
     void computeAndPrintFFT();
 };
