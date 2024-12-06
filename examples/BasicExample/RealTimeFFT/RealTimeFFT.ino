@@ -1,4 +1,4 @@
-#include "RealTimeFFT.h"
+#include <fft.h>
 
 #define SAMPLE_FREQUENCY 1000
 #define SAMPLE_SIZE 128

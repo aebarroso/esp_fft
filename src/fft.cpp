@@ -1,4 +1,4 @@
-#include "RealTimeFFT.h"
+#include "fft.h"
 
 RealTimeFFT::RealTimeFFT(float samplingFrequency, size_t sampleSize)
     : _samplingFrequency(samplingFrequency),

@@ -1,8 +1,7 @@
-#ifndef REALTIMEFFT_H
-#define REALTIMEFFT_H
+#ifndef FFT_H
+#define FFT_H
 
 #include <Arduino.h>
-#include "fft.h"
 
 class RealTimeFFT {
 public:
